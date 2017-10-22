@@ -1,0 +1,71 @@
+package me.outfiay.bots.FilterBot4;
+
+import java.io.*;
+import javax.security.auth.login.LoginException;
+import net.dv8tion.jda.core.AccountType;
+import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.JDABuilder;
+import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.core.exceptions.RateLimitedException;
+import net.dv8tion.jda.core.hooks.ListenerAdapter;
+
+public class App extends ListenerAdapter	
+{
+	public String wordId = "", wordContent = "";
+    public static void main( String[] args ) throws LoginException, IllegalArgumentException, InterruptedException, RateLimitedException
+    {
+    	
+    	JDA jdabot = new JDABuilder(AccountType.BOT).setToken("MzcxMzczNjczMzM0MTc3Nzkz.DM0sRA.5ACIqV5C9KVn1zg4eJFEWzqStpE").buildBlocking();
+    	jdabot.addEventListener(new App());
+    }
+    
+    @Override
+    public void onMessageReceived(MessageReceivedEvent e)
+    {
+    	try {
+    		PrintWriter pw = new PrintWriter (new FileWriter ("BannedWords.txt", true));
+    		BufferedReader br = new BufferedReader (new FileReader ("BannedWords.txt"));
+    		String input;
+    		Message objMsg = e.getMessage();  		
+        	MessageChannel objChannel = e.getChannel();
+        	User objUser = e.getAuthor();
+        	
+        	if (objMsg.getContent().equals("?reset")) {
+        		PrintWriter (new FileWriter ("BannedWords.txt"));
+        		pw.close();
+        		objChannel.deleteMessageById(objMsg.getId()).queue();
+        		objChannel.sendMessage("The banned words list has been reset!").queue();
+        	}
+        	
+        	input = br.readLine();
+        	while (input != null) {
+        		if (objMsg.getContent().equalsIgnoreCase(input)) {
+        			objChannel.deleteMessageById(objMsg.getId()).queue();
+        			objChannel.sendMessage("That word or phrase has been banned, " + objUser.getAsMention() + "!").queue();
+        			break;
+        		}
+        		input = br.readLine();
+        	}
+        	if (objMsg.getContent().equals("?enforce")) {
+        		pw.println (wordContent);
+        		pw.close ();
+        		objChannel.deleteMessageById(wordId).queue();
+        		objChannel.deleteMessageById(objMsg.getId()).queue();
+        		objChannel.sendMessage("That word or phrase is now banned, " + objUser.getAsMention() + "!").queue();
+        	}
+        	wordId = objMsg.getId();
+        	wordContent = objMsg.getContent();
+    	}
+    	catch (IOException a) {
+    		System.out.println("Text file not found.");
+    	}   	
+    }
+
+	private void PrintWriter(FileWriter fileWriter) {
+		// TODO Auto-generated method stub
+		
+	}
+}
